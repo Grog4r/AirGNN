@@ -4,6 +4,9 @@ import os
 
 from model import GNN_Model
 
+path = "/home/niklas/Nextcloud/Uni/INFB-10/IoTSeminar/air_sim/AirGnn/data/models/M1-U32-R16-LR0.001-WD0-I6-Arelu-EP500.pickle"
+
+
 
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Description of your script.")
@@ -13,15 +16,7 @@ def parse_arguments():
         "--model",
         type=str,
         default="",
-        help="The path to the model to retrain.",
-    )
-
-    parser.add_argument(
-        "-e",
-        "--epochs",
-        type=int,
-        default=1000,
-        help="Number of retraining epochs (default: 1000)",
+        help="The path of the model to evaluate.",
     )
 
     return parser.parse_args()
@@ -37,7 +32,8 @@ if __name__ == "__main__":
     model_name = model_path.split("/")[-1]
     model = GNN_Model.load(model_path)
 
-    epochs = args.epochs
+    total_loss, total_error, average_error = model.evaluate()
 
-    model.train(epochs=epochs)
-    model.save(f"models/RETRAINED_{model_name}")
+    print(f"The model {model_name} has the follwing metrics:")
+    print(f"Loss: {total_loss}, Total Error: {total_error}, Avg. Error: {average_error}")
+

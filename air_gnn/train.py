@@ -13,15 +13,15 @@ def parse_arguments():
         "--hidden_message",
         type=int,
         default=2,
-        help="Number of hidden units in the message layer (default: 16)",
+        help="Number of hidden units in the message layer (default: 2)",
     )
 
     parser.add_argument(
         "-hu",
         "--hidden_update",
         type=int,
-        default=32,
-        help="Number of hidden units in the update layer (default: 32)",
+        default=16,
+        help="Number of hidden units in the update layer (default: 16)",
     )
 
     parser.add_argument(
@@ -29,7 +29,7 @@ def parse_arguments():
         "--hidden_readout",
         type=int,
         default=4,
-        help="Number of hidden units in the readout layer (default: 16)",
+        help="Number of hidden units in the readout layer (default: 4)",
     )
 
     parser.add_argument(
@@ -37,7 +37,7 @@ def parse_arguments():
         "--learning_rate",
         type=float,
         default=0.001,
-        help="Learning rate for the optimizer (default: 0.005)",
+        help="Learning rate for the optimizer (default: 0.001)",
     )
 
     parser.add_argument(
@@ -61,7 +61,7 @@ def parse_arguments():
         "--n_iterations",
         type=int,
         default=7,
-        help="Number of message passing iterations (default: 5)",
+        help="Number of message passing iterations (default: 7)",
     )
 
     parser.add_argument(

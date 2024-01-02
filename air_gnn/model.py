@@ -195,7 +195,6 @@ def readout_module(graph, final_hidden_states, readout_function):
     outputs = {}
     for node in graph.nodes():
         outputs[node] = readout_function(final_hidden_states[node])
-
     return outputs
 
 
