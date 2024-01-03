@@ -59,11 +59,6 @@ class MessageFunction(nn.Module):
         return message
 
 
-class NoMessageFunction(nn.Module):
-    def forward(self, hidden_state):
-        return hidden_state
-
-
 def aggregation_function(graph, node, messages, verbose=False):
     aggregated_message = None
     neighbors = nx.neighbors(graph, node)
@@ -198,12 +193,6 @@ def readout_module(graph, final_hidden_states, readout_function):
     return outputs
 
 
-def no_readout_module(graph, final_hidden_states, _):
-    outputs = {}
-    for node in graph.nodes():
-        outputs[node] = final_hidden_states[node].item()[0]
-
-
 class GNN_Model:
     def __init__(
         self,
@@ -222,8 +211,6 @@ class GNN_Model:
         init_weights=False,
         criterion: str = "MSE",
         decay: bool = False,
-        no_message_function: bool = False,
-        no_readout_function: bool = False,
     ):
         # self.device = (
         #     "cuda"
@@ -257,16 +244,13 @@ class GNN_Model:
 
         self.n_features = self.show_graph_info(self.train_graph)
 
-        if no_message_function:
-            self.message_function = NoMessageFunction().to(self.device)
-        else:
-            self.message_function = MessageFunction(
-                input_size=self.n_features,
-                hidden_size=hidden_message,
-                output_size=self.n_features,
-                activation=activation,
-                init_weights=init_weights,
-            ).to(self.device)
+        self.message_function = MessageFunction(
+            input_size=self.n_features,
+            hidden_size=hidden_message,
+            output_size=self.n_features,
+            activation=activation,
+            init_weights=init_weights,
+        ).to(self.device)
 
         self.update_function = UpdateFunction(
             input_size=2 * self.n_features,
@@ -276,25 +260,18 @@ class GNN_Model:
             init_weights=init_weights,
         ).to(self.device)
 
-        if not no_readout_function:
-            self.readout_function = ReadoutFunction(
-                input_size=self.n_features,
-                hidden_size=hidden_readout,
-                output_size=1,
-                activation=activation,
-                init_weights=init_weights,
-            ).to(self.device)
-            self.readout_module = readout_module
-        else:
-            self.readout_function = None
-            self.readout_module = no_readout_module
+        self.readout_function = ReadoutFunction(
+            input_size=self.n_features,
+            hidden_size=hidden_readout,
+            output_size=1,
+            activation=activation,
+            init_weights=init_weights,
+        ).to(self.device)
+        self.readout_module = readout_module
 
-        self.parameters = list(self.update_function.parameters())
-
-        if not no_message_function:
-            self.parameters += list(self.message_function.parameters())
-        if not no_readout_function:
-            self.parameters += list(self.readout_function.parameters())
+        self.parameters = list(self.message_function.parameters())
+        self.parameters += list(self.update_function.parameters())
+        self.parameters += list(self.readout_function.parameters())
 
         self.criterion = nn.MSELoss()
         if criterion == "L1":
@@ -510,7 +487,37 @@ class GNN_Model:
         return (total_loss.item(), total_error.item(), average_error.item())
 
     def predict(self, graph: nx.Graph):
-        pass
+        initial_hidden_states = {}
+        for node in graph.nodes():
+            volume = graph.nodes[node]["features"][0]
+            temperature = graph.nodes[node]["features"][1]
+
+            # You can choose your own initialization method here
+            initial_hidden_states[node] = torch.tensor([temperature, volume]).to(
+                self.device
+            )
+
+        hidden_states = initial_hidden_states.copy()
+
+        # Message passing
+        for i in range(self.n_iterations):
+            hidden_states = message_passing_iteration(
+                graph,
+                hidden_states,
+                self.message_function,
+                aggregation_function,
+                self.update_function,
+            )
+
+        # Readout module
+        regression_outputs = self.readout_module(
+            graph, hidden_states, self.readout_function
+        )
+        
+        for node in graph.nodes():
+            print(regression_outputs[node])
+
+        return regression_outputs
 
     def save(self, path):
         print(f"Saving this to {path}...")
