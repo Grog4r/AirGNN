@@ -12,24 +12,24 @@ def parse_arguments():
         "-hm",
         "--hidden_message",
         type=int,
-        default=2,
-        help="Number of hidden units in the message layer (default: 2)",
+        default=1,
+        help="Number of hidden units in the message layer (default: 1)",
     )
 
     parser.add_argument(
         "-hu",
         "--hidden_update",
         type=int,
-        default=16,
-        help="Number of hidden units in the update layer (default: 16)",
+        default=32,
+        help="Number of hidden units in the update layer (default: 32)",
     )
 
     parser.add_argument(
         "-hr",
         "--hidden_readout",
         type=int,
-        default=4,
-        help="Number of hidden units in the readout layer (default: 4)",
+        default=16,
+        help="Number of hidden units in the readout layer (default: 16)",
     )
 
     parser.add_argument(
@@ -52,8 +52,8 @@ def parse_arguments():
         "-e",
         "--epochs",
         type=int,
-        default=1000,
-        help="Number of training epochs (default: 1000)",
+        default=500,
+        help="Number of training epochs (default: 500)",
     )
 
     parser.add_argument(
@@ -102,20 +102,6 @@ def parse_arguments():
         help="Enable initializing weights with xavier_uniform. (default: False)",
     )
 
-    parser.add_argument(
-        "-nm",
-        "--no_message_function",
-        action="store_true",
-        help="Disables the message function. (default: False)",
-    )
-
-    parser.add_argument(
-        "-nr",
-        "--no_readout_function",
-        action="store_true",
-        help="Disables the readout function. (default: False)",
-    )
-
     return parser.parse_args()
 
 
@@ -138,8 +124,6 @@ if __name__ == "__main__":
     CRITERION = args.criterion
     DECAY = args.decay
     EPOCHS = args.epochs
-    NO_MESSAGE_FUNCTION = args.no_message_function
-    NO_READOUT_FUNCTION = args.no_readout_function
 
     MODEL_NAME = (
         f"M{HIDDEN_MESSAGE}"
@@ -152,8 +136,6 @@ if __name__ == "__main__":
         f"-C{CRITERION}"
         f"-D{DECAY}"
         f"-EP{EPOCHS}"
-        f"-NM{NO_MESSAGE_FUNCTION}"
-        f"-NR{NO_READOUT_FUNCTION}"
     )
     print(f"Model Name: {MODEL_NAME}")
 
@@ -172,8 +154,6 @@ if __name__ == "__main__":
         criterion=CRITERION,
         decay=DECAY,
         model_name=MODEL_NAME,
-        no_message_function=NO_MESSAGE_FUNCTION,
-        no_readout_function=NO_READOUT_FUNCTION,
     )
 
     model.train(epochs=EPOCHS, VERBOSITY=args.verbosity)
